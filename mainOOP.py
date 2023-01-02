@@ -3,6 +3,8 @@ from tkinter import ttk
 from tkinter import *
 import threading
 import time
+
+import csv
 from pythonosc.dispatcher import Dispatcher
 from pythonosc.osc_server import ThreadingOSCUDPServer
 
@@ -129,6 +131,18 @@ class eegRecord(tk.Tk):
         self.buttonStart.grid(row=6,column=0,columnspan=2,padx=10,pady=10,sticky="NS")
         
     def startAction(self):
+        self.filePath=''
+        
+        if self.emotion=='Anger':
+            self.filePath='project/anger/'
+        elif self.emotion=='Fear':
+            self.filePath='project/fear/'
+        elif self.emotion=='Joy':
+            self.filePath='project/joy/'
+        elif self.emotion=='Sad':
+            self.filePath='project/sad/'
+        self.filePathName=self.filePath+self.name+'.csv'
+        
         self.buttonStart.config(state=tk.DISABLED)
         thread=threading.Thread(target=self.init_main)
         thread.start()
@@ -142,6 +156,7 @@ class eegRecord(tk.Tk):
             
     
     def init_main(self):
+        self.listJoin=[]
         self.dispatcher=Dispatcher()
         self.dispatcher.map("/muse/elements/touching_forehead", self.handler)
         self.dispatcher.map("/muse/eeg", self.eeg_handler)
@@ -151,7 +166,10 @@ class eegRecord(tk.Tk):
         t_end = time.time() + 10 
         while time.time() < t_end:
             self.server.handle_request()
-        self.server.server_close()   
+        self.server.server_close()
+        with open(self.filePathName,'w',newline='') as self.f:
+            self.writer=csv.writer(self.f,lineterminator='\n')
+            self.writer.writerows(self.listJoin)
         print("selesai")
 
     def handler(self,address,*args):
@@ -164,10 +182,18 @@ class eegRecord(tk.Tk):
             
     def eeg_handler(self, address, *args):
         eegRecord.tp9, eegRecord.af7, eegRecord.af8, eegRecord.tp10, eegRecord.au = args
+        
         self.labelValueTP9.config(text=":"+str(eegRecord.tp9))
         self.labelValueTP10.config(text=":"+str(eegRecord.tp10))
         self.labelValueAF7.config(text=":"+str(eegRecord.af7))
         self.labelValueAF8.config(text=":"+str(eegRecord.af8))
+        self.data=[eegRecord.tp9,eegRecord.af7,eegRecord.af8,eegRecord.tp10]
+        self.listJoin.append(self.data)
+        # print(type(self.list))
+        # self.listData.append(self.data)
+        
+            # self.writer.writerow('\n')
+        
 
 # app=Intro()
 # app.mainloop()
