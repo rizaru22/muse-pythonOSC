@@ -3,7 +3,7 @@ from tkinter import ttk
 from tkinter import *
 import threading
 import time
-
+from datetime import datetime
 import csv
 from pythonosc.dispatcher import Dispatcher
 from pythonosc.osc_server import ThreadingOSCUDPServer
@@ -131,17 +131,10 @@ class eegRecord(tk.Tk):
         self.buttonStart.grid(row=6,column=0,columnspan=2,padx=10,pady=10,sticky="NS")
         
     def startAction(self):
-        self.filePath=''
+        self.filePath='project/ujicoba/data-raw/'
         
-        if self.emotion=='Anger':
-            self.filePath='project/anger/'
-        elif self.emotion=='Fear':
-            self.filePath='project/fear/'
-        elif self.emotion=='Joy':
-            self.filePath='project/joy/'
-        elif self.emotion=='Sad':
-            self.filePath='project/sad/'
-        self.filePathName=self.filePath+self.name+'.csv'
+        
+        self.filePathName=self.filePath+self.name+'-'+self.emotion+'.csv'
         
         self.buttonStart.config(state=tk.DISABLED)
         thread=threading.Thread(target=self.init_main)
@@ -182,7 +175,8 @@ class eegRecord(tk.Tk):
             
     def eeg_handler(self, address, *args):
         eegRecord.tp9, eegRecord.af7, eegRecord.af8, eegRecord.tp10, eegRecord.au = args
-        
+        self.datetimeObj=datetime.now()
+        self.timeStamps=self.datetimeObj.strftime("%H:%M:%S.%f")
         self.labelValueTP9.config(text=":"+str(eegRecord.tp9))
         self.labelValueTP10.config(text=":"+str(eegRecord.tp10))
         self.labelValueAF7.config(text=":"+str(eegRecord.af7))
