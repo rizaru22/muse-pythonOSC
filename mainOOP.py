@@ -156,14 +156,22 @@ class eegRecord(tk.Tk):
         
         self.server=ThreadingOSCUDPServer((eegRecord.ip,eegRecord.port),self.dispatcher)
         print("Listening on UDP port "+str(eegRecord.port))
-        t_end = time.time() + 10 
-        while time.time() < t_end:
-            self.server.handle_request()
-        self.server.server_close()
+        threading.Thread(target=self.startServer).start()
+        time.sleep(3)
+        threading.Thread(target=self.stopServer).start()
         with open(self.filePathName,'w',newline='') as self.f:
             self.writer=csv.writer(self.f,lineterminator='\n')
+            self.header=['timestamps','TP9','AF7','AF8','TP10','Right  AUX']
+            self.writer.writerow(self.header)
             self.writer.writerows(self.listJoin)
         print("selesai")
+        
+        
+    def startServer(self):
+        self.server.serve_forever(poll_interval=5)
+    
+    def stopServer(self):
+        self.server.shutdown()
 
     def handler(self,address,*args):
         for arg in args:
@@ -174,6 +182,7 @@ class eegRecord(tk.Tk):
                 self.labelConnection.config(text=": Disconnected")
             
     def eeg_handler(self, address, *args):
+        self.data=[]
         eegRecord.tp9, eegRecord.af7, eegRecord.af8, eegRecord.tp10, eegRecord.au = args
         self.datetimeObj=datetime.now()
         self.timeStamps=self.datetimeObj.strftime("%H:%M:%S.%f")
@@ -181,16 +190,9 @@ class eegRecord(tk.Tk):
         self.labelValueTP10.config(text=":"+str(eegRecord.tp10))
         self.labelValueAF7.config(text=":"+str(eegRecord.af7))
         self.labelValueAF8.config(text=":"+str(eegRecord.af8))
-        self.data=[eegRecord.tp9,eegRecord.af7,eegRecord.af8,eegRecord.tp10]
+        self.data=list(args)
+        self.data.insert(0,self.timeStamps)
         self.listJoin.append(self.data)
-        # print(type(self.list))
-        # self.listData.append(self.data)
         
-            # self.writer.writerow('\n')
-        
-
-# app=Intro()
-# app.mainloop()
-
 s=Setting()
 s.mainloop()
