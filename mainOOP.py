@@ -5,9 +5,10 @@ import threading
 import time
 from datetime import datetime
 import csv
+import os
 from pythonosc.dispatcher import Dispatcher
 from pythonosc.osc_server import ThreadingOSCUDPServer
-
+from EEG_generate_training_matrix import gen_training_matrix
 
 
 class Setting(tk.Tk):
@@ -32,16 +33,16 @@ class Setting(tk.Tk):
         
         #radioButton
         
-        self.rbFear=ttk.Radiobutton(self,text="Fear",variable=self.emotion,value="Fear")
+        self.rbFear=ttk.Radiobutton(self,text="Fear",variable=self.emotion,value="fear")
         self.rbFear.grid(row=2,column=0,padx=10,pady=10,sticky="W")
         
-        self.rbAnger=ttk.Radiobutton(self,text="Anger",variable=self.emotion,value="Anger")
+        self.rbAnger=ttk.Radiobutton(self,text="Anger",variable=self.emotion,value="anger")
         self.rbAnger.grid(row=2,column=1,padx=10,pady=10,sticky="W")
         
-        self.rbJoy=ttk.Radiobutton(self,text="Joy",variable=self.emotion,value="Joy")
+        self.rbJoy=ttk.Radiobutton(self,text="Joy",variable=self.emotion,value="joy")
         self.rbJoy.grid(row=3,column=0,padx=10,pady=10,sticky="W")
         
-        self.rbSad=ttk.Radiobutton(self,text="Sad",variable=self.emotion,value="Sad")
+        self.rbSad=ttk.Radiobutton(self,text="Sad",variable=self.emotion,value="sad")
         self.rbSad.grid(row=3,column=1,padx=10,pady=10,sticky="W")
         
         
@@ -122,19 +123,30 @@ class eegRecord(tk.Tk):
         self.labelValueAF8=ttk.Label(self,text=":")
         self.labelValueAF8.grid(row=6,column=1,padx=10,pady=10,sticky="W")
         
-        
-        
-        
-        
         #button
         self.buttonStart=ttk.Button(self,text="Start",command=self.startAction)
-        self.buttonStart.grid(row=6,column=0,columnspan=2,padx=10,pady=10,sticky="NS")
+        self.buttonStart.grid(row=7,column=0,columnspan=2,padx=10,pady=10,sticky="NS")
         
+        self.buttonGenerateTrainingMatrix=ttk.Button(self,text="Generate Training Matrix",command=self.generateTrainingMatrix)
+        self.buttonGenerateTrainingMatrix.grid(row=8,column=0,columnspan=2,padx=10,pady=10,sticky="NS")
+    
+    def generateTrainingMatrix(self):
+        self.inputDirectory='project/ujicoba/data-raw/'
+        self.outputDirectory='project/ujicoba/training.csv'
+        gen_training_matrix(self.inputDirectory,self.outputDirectory,cols_to_ignore = -1)
+    
+    def countFileCSV(self):
+        countFiles=0
+        for files in os.listdir(self.filePath):
+            if os.path.isfile(os.path.join(self.filePath,files)):
+                countFiles +=1
+        return countFiles
+            
     def startAction(self):
         self.filePath='project/ujicoba/data-raw/'
+        countFiles=self.countFileCSV()+1
         
-        
-        self.filePathName=self.filePath+self.name+'-'+self.emotion+'.csv'
+        self.filePathName=self.filePath+self.name+'-'+self.emotion+'-'+str(countFiles)+'.csv'
         
         self.buttonStart.config(state=tk.DISABLED)
         thread=threading.Thread(target=self.init_main)
@@ -185,7 +197,7 @@ class eegRecord(tk.Tk):
         self.data=[]
         eegRecord.tp9, eegRecord.af7, eegRecord.af8, eegRecord.tp10, eegRecord.au = args
         self.datetimeObj=datetime.now()
-        self.timeStamps=self.datetimeObj.strftime("%H:%M:%S.%f")
+        self.timeStamps=self.datetimeObj.strftime("%H%M%S.%f")
         self.labelValueTP9.config(text=":"+str(eegRecord.tp9))
         self.labelValueTP10.config(text=":"+str(eegRecord.tp10))
         self.labelValueAF7.config(text=":"+str(eegRecord.af7))
