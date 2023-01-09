@@ -169,7 +169,7 @@ class eegRecord(tk.Tk):
         self.server=ThreadingOSCUDPServer((eegRecord.ip,eegRecord.port),self.dispatcher)
         print("Listening on UDP port "+str(eegRecord.port))
         threading.Thread(target=self.startServer).start()
-        time.sleep(3)
+        time.sleep(60)
         threading.Thread(target=self.stopServer).start()
         with open(self.filePathName,'w',newline='') as self.f:
             self.writer=csv.writer(self.f,lineterminator='\n')
@@ -184,6 +184,7 @@ class eegRecord(tk.Tk):
     
     def stopServer(self):
         self.server.shutdown()
+        self.server.server_close()
 
     def handler(self,address,*args):
         for arg in args:
@@ -196,8 +197,8 @@ class eegRecord(tk.Tk):
     def eeg_handler(self, address, *args):
         self.data=[]
         eegRecord.tp9, eegRecord.af7, eegRecord.af8, eegRecord.tp10, eegRecord.au = args
-        self.datetimeObj=datetime.now()
-        self.timeStamps=self.datetimeObj.strftime("%H%M%S.%f")
+        # self.datetimeObj=datetime.now()
+        self.timeStamps=time.time()
         self.labelValueTP9.config(text=":"+str(eegRecord.tp9))
         self.labelValueTP10.config(text=":"+str(eegRecord.tp10))
         self.labelValueAF7.config(text=":"+str(eegRecord.af7))
